@@ -7,3 +7,7 @@ How much does history-based prefix routing improve p95 time-to-first-token (TTFT
 | As cache pressure rises, the advantage shrinks, because the tree predicts prefixes the worker has already evicted. This shows up as a rising false-hit rate.
 ### Hypothesis 3
 | Pure affinity (imbalance fallback off) raises p99 TTFT under skewed load, and the fallback recovers it.
+
+
+### Tuesday October 13th, 2026
+I am using the llm-d-inference-sim v0.10.2
