@@ -1,0 +1,28 @@
+# deploy/sim/profile.yaml — loaded by every simulator worker via --config
+#
+# Sources:
+#   [P] published profile: llm-d-inference-sim/manifests/latency-profiles/8b-h100-balanced-per-token.yaml
+#   [C] flag definitions:  llm-d-inference-sim/docs/configuration.md
+#   [M] my choice — defend or change; record changes in NOTES.md
+
+model: sim-8b                   # [C] mandatory. [M] dummy name -> built-in regex tokenizer, no render server
+port: 8000                      # [C] default is 8000; explicit for visibility
+max-num-seqs: 16                # [P] load factor is calibrated against this (default would be 5)
+max-model-len: 8192             # [M] default 1024 is too small for the gate prompt
+seed: 42                        # [C] seeds random jitter. [M] value
+force-dummy-tokenizer: true     # [M] removes startup network call to hugging face
+
+# KV cache
+enable-kvcache: true            # [C][R] without it no cache is simulated
+block-size: 16                  # [R] allowed: 8,16,32,64,128
+kv-cache-size: 2048             # [C] max number of blocks. [M] 2048 x 16 = 32,768 tokens; swept in week 3
+
+# Latency — copied verbatim from [P]. Do not tune toward a result.
+latency-calculator: per-token   # [P][R] only mode where cache hits change TTFT
+prefill-overhead: 30ms          # [P]
+prefill-time-per-token: 250us   # [P]
+prefill-time-std-dev: 5ms       # [P]
+inter-token-latency: 12ms       # [P]
+inter-token-latency-std-dev: 2ms  # [P]
+time-factor-under-load: 2.0     # [P]
+# time-to-first-token deliberately unset (0); kv-cache-transfer-* omitted (P/D only)
