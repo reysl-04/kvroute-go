@@ -17,7 +17,7 @@ How much does history-based prefix routing improve p95 time-to-first-token (TTFT
 
 **Setup:** llm-d-inference-sim v0.10.2, profile 8b-h100-balanced-per-token (changed: model, max-model-len, kv-cache-size)
 
-**Result:**:
+**Result:**
 
 | Run | Tokens | Cached | Measured |
 |---|---|---|---|
@@ -32,6 +32,7 @@ PASS.
 
 **Observations:**  
 - Cache hit cut TTFT ~93%. Controls stayed slow.
+- Extra time beyond the formula: 3–42 ms, largest on the first request.
 - `cached_tokens` is in non-streaming responses.
 - KV cache size flag: `kv-cache-size` (blocks).
 - Only full 16-token blocks are cached (3000 → 2992)
