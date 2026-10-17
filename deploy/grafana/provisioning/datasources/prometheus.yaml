@@ -1,0 +1,14 @@
+# deploy/grafana/provisioning/datasources/prometheus.yaml — loaded by Grafana at startup
+
+apiVersion: 1                             # provisioning file format version; always 1
+
+datasources:
+  - name: Prometheus                      # name shown in the Grafana UI
+    uid: prometheus                       # fixed id, so the week 2 dashboard JSON can reference it
+    type: prometheus                      # which data source plugin to use
+    access: proxy                         # Grafana's server makes the queries, not your browser
+    url: http://prometheus:9090           # compose service name; "localhost" here would mean the Grafana container
+    isDefault: true                       # new panels use this data source
+    editable: false                       # UI edits are blocked; this file stays the source of truth
+    jsonData:
+      timeInterval: 5s                    # tells Grafana the scrape interval, so $__rate_interval windows fit 5s data
