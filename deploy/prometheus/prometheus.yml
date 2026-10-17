@@ -1,0 +1,9 @@
+# deploy/prometheus/prometheus.yml — mounted into the prometheus service by compose.yaml
+
+global:
+  scrape_interval: 5s                     # how often every target is scraped; scrape_timeout auto-clamps to this
+
+scrape_configs:
+  - job_name: sim                         # becomes the job="sim" label on every scraped series
+    static_configs:
+      - targets: [w1:8000, w2:8000, w3:8000, w4:8000]  # compose service names resolve on the shared network; path defaults to /metrics
