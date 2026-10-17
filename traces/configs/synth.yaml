@@ -1,0 +1,13 @@
+# traces/configs/synth.yaml — default trace: high prefix reuse, light load
+# Generate: go run ./cmd/tracegen --config traces/configs/synth.yaml --out traces/synth.jsonl
+
+seed: 42                # same seed + same Go version = byte-identical trace
+sessions: 200           # conversations in the trace
+turns_per_session: 5    # requests per conversation
+prefix_groups: 8        # 8 distinct shared prefixes, so about 25 sessions share each one
+prefix_words: 1000      # shared prefix length: about 1000 sim tokens, 62 full 16-token blocks
+suffix_words: 100       # new words per turn
+gap_ms: 2000            # 2 s between turns of one session
+arrival_rate: 2         # new sessions per second; about 10 requests/s in total once turns overlap
+max_tokens: 64          # output tokens per request
+# budget: (1000 + 5*100) * 1.5 + 64 = 2314, under the 8192 limit

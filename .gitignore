@@ -33,3 +33,6 @@ go.work.sum
 
 # Results
 results
+
+# Generated traces
+traces/*.jsonl 
