@@ -40,3 +40,12 @@ PASS.
 **Decision:** keep the simulator; no need for the Dynamo mocker.
 
 **Open questions:** warm-up effect on first request? `cached_tokens` in streaming responses?
+
+## 2026-10-27 - Load Generator Spec
+Load generator spec:
+
+* It reads the jsonl file created by the trace generator. 
+* It sends every ```start + t_offset_ms``` time. Each request has its own planned time to be sent. Does not wait for a response before sending next request (open-loop)
+* Load gen sends an http post method to, for now, one of the workers in the container with the following structure: prompt, max_tokens, model, stream: true. In the future, this will be sent to a load balancer/router.
+* It measures the TTFT and E2E time, determined from when the request was planned (t_offset_ms) to the when the first token arrives (TTFT), or request completed time (E2E)
+* It writes request_id, session_id, turn, worker, planned and actual sent times, ttft, e2e, status, token count, manifest and p50/p95/p99.
