@@ -28,6 +28,8 @@ func run() error {
 		return err
 	}
 
+	loadgen.Run(records[:20])
+
 	fmt.Printf("Load Gen successful. Loaded %d\n", len(records))
 	return nil
 }
