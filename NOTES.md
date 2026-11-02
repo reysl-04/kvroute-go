@@ -49,3 +49,6 @@ Load generator spec:
 * Load gen sends an http post method to, for now, one of the workers in the container with the following structure: prompt, max_tokens, model, stream: true. In the future, this will be sent to a load balancer/router.
 * It measures the TTFT and E2E time, determined from when the request was planned (t_offset_ms) to the when the first token arrives (TTFT), or request completed time (E2E)
 * It writes request_id, session_id, turn, worker, planned and actual sent times, ttft, e2e, status, token count, manifest and p50/p95/p99.
+
+## 2026-11-02 - OpenAI-compatible requests
+* tracegen: words glued at segment boundaries (e.g. environmentsort), fix after loadgen HTTP.
