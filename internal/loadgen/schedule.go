@@ -2,8 +2,11 @@ package loadgen
 
 import (
 	"bufio"
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -82,6 +85,35 @@ func fire(rec trace.Record, planned time.Time, worker string, wg *sync.WaitGroup
 		log.Printf("%s: marshal: %v", rec.RequestID, err)
 		return
 	}
-	fmt.Println(len(b))
-	fmt.Printf("Request: %s, Offset: %d, Time Since: %v, worker: %s\n", rec.RequestID, rec.TOffsetMS, time.Since(planned), worker)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, "POST", worker+"/v1/completions", bytes.NewReader((b)))
+	if err != nil {
+		log.Printf("%s: %v", rec.RequestID, err)
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	sentAt := time.Now()
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("%s: %v", rec.RequestID, err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Error path: read the server's error message, log it, stop.
+	// Must come before any draining: the body can only be read once.
+	if resp.StatusCode != http.StatusOK {
+		errBody, _ := io.ReadAll(resp.Body)
+		log.Printf("%s: status %d: %s", rec.RequestID, resp.StatusCode, errBody)
+		return
+	}
+
+	// Success path: read to the end (waits for the full stream,
+	// lets the connection be reused). Replaced by the SSE scanner next step.
+	io.Copy(io.Discard, resp.Body)
+
+	fmt.Printf("%s worker=%s status=%d sendLag=%v e2e=%v\n",
+		rec.RequestID, worker, resp.StatusCode, sentAt.Sub(planned), time.Since(planned))
 }
