@@ -50,7 +50,7 @@ Load generator spec:
 * It measures the TTFT and E2E time, determined from when the request was planned (t_offset_ms) to the when the first token arrives (TTFT), or request completed time (E2E)
 * It writes request_id, session_id, turn, worker, planned and actual sent times, ttft, e2e, status, token count, manifest and p50/p95/p99.
 
-## 2026-11-02 - loadgen sends real requests
+## 2026-11-02 - loadgen requests
 * tracegen: words glued at segment boundaries (e.g. environmentsort), fix after loadgen HTTP.
 * 20 requests, all 200, send lag < 1.5 ms.
 * Cache effect already visible by luck: when round robin sent a session's next turn
@@ -58,3 +58,9 @@ Load generator spec:
 * Max E2E ~1.15 s vs gap_ms 2000: under the 2x margin. Recheck with percentiles.
 * TODO: run-level context (signal.NotifyContext) so Ctrl-C cancels in-flight requests.
 * Pending: does stream_options.include_usage return token counts / cached_tokens?
+
+## 2026-11-03 - SSE 
+TTFT is the first chunk with non-empty text, because that’s when the user actually sees something. The other option, “first data: line”, breaks as soon as a server sends an empty preamble chunk or a stop-only chunk.
+
+## 2026-11-04 - SSE
+No-text streams. If a stream reaches data: [DONE] without any chunk carrying non-empty text, sse.Read returns no error and a zero FirstText. The stream itself ended correctly, so it isn't a read failure. The caller (fire, and the proxy later) checks FirstText.IsZero() and records the request as a failure with no TTFT, never as a timing. Computing TTFT from a zero time would produce a huge negative value.
