@@ -64,3 +64,26 @@ TTFT is the first chunk with non-empty text, because that’s when the user actu
 
 ## 2026-11-04 - SSE
 No-text streams. If a stream reaches data: [DONE] without any chunk carrying non-empty text, sse.Read returns no error and a zero FirstText. The stream itself ended correctly, so it isn't a read failure. The caller (fire, and the proxy later) checks FirstText.IsZero() and records the request as a failure with no TTFT, never as a timing. Computing TTFT from a zero time would produce a huge negative value.
+
+
+## 2026-11-12 — loadgen measures TTFT/E2E
+
+**Done**
+- `fire` now reads the stream with `sse.Read`. TTFT = FirstText − planned,
+  E2E = Done − planned. Stream error or zero FirstText -> logged as failure.
+- Run (4 workers, first 20 records, seed 42): all 200, TTFT < E2E on every request,
+  sendLag ≈ 0.2–1.4 ms.
+
+**Observed**
+- Cold TTFT ≈ 300–375 ms. Several requests ≈ 55–90 ms.
+- Same-session, same-worker turns were fast (s0004-t01, s0005-t01, s0003-t01, s0001-t02).
+- But some fast requests had no prior turn on that worker: s0007-t00, s0009-t00 (first turns),
+  s0001-t01 (turn 0 ran on another worker).
+
+**Open questions**
+- Is a shared prefix across sessions causing cross-session cache hits? Check the trace
+  generator's shared-prefix settings. If so, Run A's "turn 2 < turn 1" isn't a clean test.
+- Decode check: does (E2E − TTFT) / (chunks − 1) match the profile's inter-token latency?
+
+**Next**
+- Run A, then Run B + decode check.

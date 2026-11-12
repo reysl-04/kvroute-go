@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/reysl-04/kvroute-go/internal/sse"
 	"github.com/reysl-04/kvroute-go/internal/trace"
 )
 
@@ -112,8 +113,22 @@ func fire(rec trace.Record, planned time.Time, worker string, wg *sync.WaitGroup
 
 	// Success path: read to the end (waits for the full stream,
 	// lets the connection be reused). Replaced by the SSE scanner next step.
-	io.Copy(io.Discard, resp.Body)
+	// replace io.Copy(io.Discard, resp.Body) with sse
 
-	fmt.Printf("%s worker=%s status=%d sendLag=%v e2e=%v\n",
-		rec.RequestID, worker, resp.StatusCode, sentAt.Sub(planned), time.Since(planned))
+	result, err := sse.Read(resp.Body)
+	if err != nil {
+		log.Printf("%s: %v", rec.RequestID, err)
+		return
+	}
+
+	if result.FirstText.IsZero() {
+		log.Printf("%s: No text in response", rec.RequestID)
+		return
+	}
+
+	ttft := result.FirstText.Sub(planned)
+	e2e := result.Done.Sub(planned)
+	sendLag := sentAt.Sub(planned)
+
+	fmt.Printf("<%s> worker=%s, TTFT=%v, E2E=%v, SendLag=%v, Chunk=%v\n", rec.RequestID, worker, ttft, e2e, sendLag, result.TextChunks)
 }
